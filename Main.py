@@ -1,15 +1,35 @@
 import pygame
+import pygame_menu
 import random
 
-WIDTH = 800
-HEIGHT = 1000
+WIDTH = 700
+HEIGHT = 700
 FPS = 60
 
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+pygame.mixer.music.load('fire.mp3')
+pygame.mixer.music.play()
 pygame.display.set_caption("ASTEROIDS!")
 clock = pygame.time.Clock()
+
+
+def start_menu():
+    menu = pygame_menu.Menu(300, 400, 'Welcome',
+                            theme=pygame_menu.themes.THEME_DARK)
+
+    menu.add_text_input('Type name: ')
+    # menu.add_selector('Difficulty :', [('Hard', 1), ('Easy', 2)], onchange=set_difficulty)
+    menu.add_button('Play', start_game)
+    menu.add_button('NewGame', start_game)
+    menu.add_button('Quit', pygame_menu.events.EXIT)
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                running = False
+    menu.mainloop(screen)
 
 
 class Player(pygame.sprite.Sprite):
@@ -124,9 +144,39 @@ class Mob(pygame.sprite.Sprite):
             self.speedx = random.randrange(-5, 5)
 
 
+class Background(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("iii.jpg").convert()
+        self.bg_dx = -10
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        print(self.rect.right)
+        self.rect.x += self.bg_dx
+        if self.rect.right == 700:
+            self.rect.right = 11300
+
+
+# class Sound:
+#     """
+#     Class playing sounds of the game
+#     """
+#     # TODO: Damir
+#     def __init__(self):
+#         pygame.mixer.init()
+#         self.music = pygame.mixer.music.load("fire-1.mp3")
+#
+#     def start_music(self):
+#         pygame.mixer.music.play(-1)
+
+
 all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
+# background = pygame.sprite.Group()
+background = Background()
+all_sprites.add(background)
 player = Player()
 all_sprites.add(player)
 c = 1
@@ -136,32 +186,40 @@ for i in range(c):
     mobs.add(m)
 
 
-running = True
-while running:
-    clock.tick(FPS)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
+def start_game():
+    running = True
+    while running:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 running = False
-            if event.key == pygame.K_SPACE:
-                player.shoot()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                if event.key == pygame.K_SPACE:
+                    player.shoot()
 
-    all_sprites.update()
+        all_sprites.update()
 
-    hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
-    for hit in hits:
-        m = Mob()
-        all_sprites.add(m)
-        mobs.add(m)
+        hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
+        for hit in hits:
+            m = Mob()
+            all_sprites.add(m)
+            mobs.add(m)
 
-    hits = pygame.sprite.spritecollide(player, mobs, False)
-    if hits:
-        running = False
+        hits = pygame.sprite.spritecollide(player, mobs, False)
+        if hits:
+            running = False
 
-    screen.fill("black")
-    all_sprites.draw(screen)
-    pygame.display.flip()
+        # screen.fill("black")
+        # screen.blit(background_image, [0, 0])
+        all_sprites.draw(screen)
+        pygame.display.flip()
+
+
+
+
+
+start_menu()
 
 pygame.quit()
